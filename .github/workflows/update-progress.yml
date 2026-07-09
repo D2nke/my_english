@@ -1,0 +1,36 @@
+name: Atualizar badge de progresso
+
+# Roda em qualquer push, EXCETO nas branches main e master
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  update-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Recalcular progresso e atualizar badge
+        run: python scripts/update_progress.py
+
+      - name: Commitar alteracoes (se houver)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore: atualiza badge de progresso [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}
