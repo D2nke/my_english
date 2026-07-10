@@ -11,9 +11,8 @@ CHECKLIST_FILE = Path("words/1000-palavras-mais-comuns-ingles.md")
 README_FILE = Path("README.md")
 
 BADGE_PATTERN = re.compile(
-    r"!\[Progresso\]\(https://img\.shields\.io/badge/palavras%20aprendidas-\d+%2F\d+-\w+\)"
+    r"!\[Progress\]\(https://img\.shields\.io/badge/words%20learned-\d+%2F\d+-\w+\)"
 )
-
 
 def count_progress(text: str) -> tuple[int, int]:
     checked = len(re.findall(r"- \[[xX]\]", text))
