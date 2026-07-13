@@ -2,7 +2,7 @@
 
 A personal project to track my English vocabulary progress by checking off which of the 5000 most frequent words I already know.
 
-![Progress](https://img.shields.io/badge/words%20learned-200%2F5000-red)
+![Progress](https://img.shields.io/badge/words%20learned-1678%2F4045-yellow)
 
 ## How it works
 
