@@ -3,7 +3,7 @@ import re
 import sys
 
 def process_all_vocabulary(folder_path, words_file_path):
-    # 1. Valida e lê o arquivo com as NOVAS palavras (que serão as ÚNICAS desconhecidas)
+    # 1. Valida e lê o arquivo com as novas palavras
     if not os.path.exists(words_file_path):
         print(f"Erro: O arquivo de palavras '{words_file_path}' não foi encontrado.")
         print("Uso correto: python3 script.py ./caminho_do_arquivo_com_palavras.md")
@@ -13,42 +13,59 @@ def process_all_vocabulary(folder_path, words_file_path):
     with open(words_file_path, 'r', encoding='utf-8') as f:
         new_words_raw = f.read()
     
-    # Limpa e formata as novas palavras (elas serão as únicas com [ ])
+    # Limpa e formata as novas palavras recebidas por argumento
     new_unknown_words = [w.strip().lower() for w in new_words_raw.split(',') if w.strip()]
     
-    # 2. Varre a pasta para coletar APENAS as palavras conhecidas [x]
+    # Sets separados para gerenciar o estado sem perdas
     known_set = set()
-    known_pattern = re.compile(r'-\s+\[x\]\s+\d+\.\s+(.+)')
+    unknown_set = set()
     
+    # Expressões regulares para mapear os dois estados das linhas de palavras
+    known_pattern = re.compile(r'-\s+\[x\]\s+\d+\.\s+(.+)')
+    unknown_pattern = re.compile(r'-\s+\[\s*\]\s+\d+\.\s+(.+)')
+    
+    # 2. Varre a pasta de palavras mantendo o histórico de AMBOS os estados
     if os.path.exists(folder_path):
         for filename in os.listdir(folder_path):
             if filename.endswith('.md'):
                 file_path = os.path.join(folder_path, filename)
                 with open(file_path, 'r', encoding='utf-8') as f:
                     for line in f:
-                        # Procura APENAS por palavras conhecidas [x]
-                        # As linhas com [ ] são completamente ignoradas e descartadas aqui!
-                        known_match = known_pattern.search(line)
+                        line_clean = line.strip()
+                        
+                        # Se for linha vazia ou cabeçalho do Markdown, pula silenciosamente
+                        if not line_clean or line_clean.startswith('#') or line_clean.startswith('---'):
+                            continue
+                        
+                        # 1. É uma palavra conhecida?
+                        known_match = known_pattern.search(line_clean)
                         if known_match:
                             known_set.add(known_match.group(1).strip().lower())
-                        else:
-                            print(f"Aviso: Linha não reconhecida no arquivo {filename}: {line.strip()}")
+                            continue
+                        
+                        # 2. É uma palavra que já estava em estudo (desconhecida)?
+                        unknown_match = unknown_pattern.search(line_clean)
+                        if unknown_match:
+                            unknown_set.add(unknown_match.group(1).strip().lower())
+                            continue
+                            
     else:
         print(f"Erro: A pasta base '{folder_path}' não foi encontrada.")
         return
     
-    # 3. Monta a lista de desconhecidas apenas com as novas palavras
-    unknown_set = set()
+    # 3. Adiciona as novas palavras recebidas como desconhecidas
     for word in new_unknown_words:
-        # Se por acaso você passou uma palavra nova que já tinha marcado como conhecida antes,
-        # o script mantém ela como conhecida para você não perder seu progresso anterior.
+        # Só adiciona se você já não tiver marcado ela como conhecida antes (protege seu progresso!)
         if word not in known_set:
             unknown_set.add(word)
+            
+    # Garante que nenhuma palavra seja duplicada no grupo de desconhecidas se já foi conhecida
+    unknown_set = unknown_set - known_set
     
-    # 4. Unifica conhecidas e as novas desconhecidas, ordenando o índice global
+    # 4. Unifica e ordena o índice global alfabeticamente
     all_words_sorted = sorted(list(known_set) + list(unknown_set))
     
-    # 5. Geração dos arquivos estruturados de 1000 em 1000
+    # 5. Geração dos arquivos de 1000 em 1000
     words_per_file = 1000
     words_per_subgroup = 100
     
@@ -79,8 +96,6 @@ def process_all_vocabulary(folder_path, words_file_path):
                 for index, word in enumerate(subgroup_chunk):
                     current_word_num = low_bound + j + index + 1
                     
-                    # Se a palavra estiver no grupo das conhecidas antigas -> [x]
-                    # Se for das novas que você acabou de passar -> [ ]
                     status_flag = "[x]" if word in known_set else "[ ]"
                     out.write(f"- {status_flag} {current_word_num}. {word}\n")
                 
