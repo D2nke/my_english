@@ -31,6 +31,8 @@ def process_all_vocabulary(folder_path, words_file_path):
                         known_match = known_pattern.search(line)
                         if known_match:
                             known_set.add(known_match.group(1).strip().lower())
+                        else:
+                            print(f"Aviso: Linha não reconhecida no arquivo {filename}: {line.strip()}")
     else:
         print(f"Erro: A pasta base '{folder_path}' não foi encontrada.")
         return

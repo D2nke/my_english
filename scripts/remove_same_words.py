@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 
 # Pasta onde estão os arquivos
-WORDS_DIR = Path("words")
+WORDS_DIR = Path("../words")
 
 # Expressão para encontrar linhas do tipo:
 # - [ ] 123. idea
